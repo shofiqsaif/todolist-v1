@@ -1,0 +1,33 @@
+<%- include("header") -%>
+     <div class="box" id="heading">
+        <h1>
+            <%= title %>
+                <%= day %>
+        </h1>
+    </div>
+
+
+    <!-- <% if (day=="Sunday" || day == "Saturday"){ %>
+       
+    <% }else{ %>
+        <h1 style="color: blueviolet;"><%= title %> <%= day %></h1>
+    <% } %> -->
+
+    <div class="box">
+        <ul>
+            <%for(let i=0;i<newListItems.length;i++){%>
+                <div class="item">
+                    <input type="checkbox">
+                    <p>
+                        <%=newListItems[i]%>
+                    </p>
+                </div>
+                <%}%>
+        </ul>
+        <form action="/" method="post">
+            <input type="text" name="newItem" placeholder="New Item">
+            <button type="submit" name="list" value="<%= title %>">+</button>
+        </form>
+    </div>
+
+<%- include("footer") -%>
