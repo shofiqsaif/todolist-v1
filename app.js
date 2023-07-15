@@ -1,71 +1,112 @@
 //jshint esversion:6
 
-const express = require('express')
+const express = require("express");
 const app = express();
 const port = 3000;
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
 app.use(express.static("public"));
-const urlencodedParser = bodyParser.urlencoded({extended:false});
-const date = require(__dirname+'/date.js');
+const urlencodedParser = bodyParser.urlencoded({ extended: false });
+const date = require(__dirname + "/date.js");
+const mongoose = require("mongoose");
+const { name } = require("ejs");
 
+var today = date.getDay();
+
+mongoose.connect("mongodb://0.0.0.0:27017/todolistDB");
+const itemSchema = new mongoose.Schema({
+    name: String,
+});
+const listSchema = new mongoose.Schema({
+    name: String,
+    items: [itemSchema],
+});
+
+const Item = mongoose.model("item", itemSchema);
+const List = mongoose.model("list", listSchema);
+
+List.find({}).then((r) => {
+    if (r.length === 0) {
+        const item1 = new Item({ name: "Wake Up" });
+        const item2 = new Item({ name: "Cook" });
+        const item3 = new Item({ name: "Eat" });
+        const list = new List({
+            name: "",
+            items: [item1, item2, item3],
+        });
+        list.save();
+    }
+});
 
 app.set("view engine", "ejs");
-
-var options = { weekday: 'long', day: 'numeric',month: 'long'};
-// var today  = new Date();
-
-// console.log(today.toLocaleDateString("en-US")); // 9/17/2016
-// console.log(today.toLocaleDateString("en-US", options)); // Saturday, September 17, 2016
-
-let title = ["Yah, It's the weekday ! Today is ", "I have to work! Today is "];
 let t = 1;
-var items = ["Buy Food","Cook Food","Eat Food"];
-var works =[];
-var item = "";
+var works = [];
 
 app.get("/", (req, res) => {
-    // var date = new Date();
-    var today = date.getDay();
-
-    console.log(today);
-    if (today == 6 || today == 0) {
-        t = 0;
-    }
-
-    res.render("index.ejs", {
-        title: title[t],
-        day: today,
-        newListItems: items,
+    List.findOne({ name: "" }).then((r) => {
+        res.render("index.ejs", {
+            title: today,
+            newListItems: r.items,
+        });
     });
 });
 
-app.get("/work", (req,res)=>{
-    res.render("index.ejs", {
-        title: "Work",
-        day: "",
-        newListItems: works,
+app.get("/:list", (req, res) => {
+    const list = req.params.list;
+    List.findOne({ name: list }).then((r) => {
+        if (r != null) {
+            res.render("index.ejs", {
+                title: list,
+                newListItems: r.items,
+            });
+        } else {
+            const l = new List({ name: list });
+            l.save();
+            res.render("index.ejs", {
+                title: list,
+                newListItems: l,
+            });
+        }
     });
 });
-
-app.post("/",urlencodedParser,(req,res)=>{
-    console.log(req.body);
+app.post("/", urlencodedParser, (req, res) => {
     item = req.body.newItem;
+    listName = req.body.list;
 
-
-    
-    console.log(item);
-    if(req.body.list === "Work")
-    {
-        works.push(item);
-        res.redirect('/work');
-    }
-    else{
-        items.push(item);
-        res.redirect('/');
+    if (req.body.list === today) {
+        List.findOne({ name: "" })
+            .then((r) => {
+                r.items.push(new Item({ name: item }));
+                r.save();
+            })
+            .then((r) => {
+                res.redirect("/");
+            });
+    } else {
+        List.findOne({ name: listName })
+            .then((r) => {
+                r.items.push(new Item({ name: item }));
+                r.save();
+            })
+            .then(res.redirect("/" + listName));
     }
 });
 
+app.post("/delete", urlencodedParser, (req, res) => {
+    const itemID = req.body.itemID;
+    let listName = req.body.listName;
+    if (listName == today) {
+        listName = "";
+    }
+
+    List.findOne({ name: listName })
+        .then((r) => {
+            r.items.pull({ _id: itemID });
+            r.save();
+        })
+        .then((r) => {
+            res.redirect("/" + listName);
+        });
+});
 app.listen(3000, () => {
     console.log("server is running on port 3000");
 });
-
