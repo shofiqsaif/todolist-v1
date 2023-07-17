@@ -12,7 +12,8 @@ const { name } = require("ejs");
 
 var today = date.getDay();
 
-mongoose.connect("mongodb://0.0.0.0:27017/todolistDB");
+// mongoose.connect("mongodb://0.0.0.0:27017/todolistDB");
+mongoose.connect("mongodb+srv://admin-saif:test123@cluster0.sbovxrx.mongodb.net/todolistDB");
 const itemSchema = new mongoose.Schema({
     name: String,
 });
@@ -107,6 +108,6 @@ app.post("/delete", urlencodedParser, (req, res) => {
             res.redirect("/" + listName);
         });
 });
-app.listen(3000, () => {
+app.listen(process.env.port | 3000, () => {
     console.log("server is running on port 3000");
 });
