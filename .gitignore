@@ -132,3 +132,4 @@ dist
 
 # Testing
 test.js
+.vscode
