@@ -108,6 +108,6 @@ app.post("/delete", urlencodedParser, (req, res) => {
             res.redirect("/" + listName);
         });
 });
-app.listen(process.env.port | 3000, () => {
+app.listen(process.env.port || 3000, () => {
     console.log("server is running on port 3000");
 });
